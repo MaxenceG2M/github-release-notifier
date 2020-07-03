@@ -42,6 +42,10 @@ def main():
                 new_releases.append(last_release)
         parser.set('release', project, last_release['release_tag'])
 
+    if not new_releases and not new_projects:
+        print('No new projets or new release detected. Bye!')
+        return
+
     content = ""
 
     for new_r in new_releases:

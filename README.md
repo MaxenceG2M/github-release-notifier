@@ -37,6 +37,9 @@ I wrote this script really quickly, certainly faster than this README. So I alre
 * The script sends mail even if no new projets or release has been detected
 * The biggest, you have to edit script to specify absolute path...
 * A lot of other little problems, like the code that's disgusting and so on.
+
+For who's asking: yes, it's normal that I have put all code in one main function [like a blind gunner.](https://media.giphy.com/media/1yMexL5rkwYhuiVEmZ/giphy.gif). Really quickly I said!
+
 But overall, the script works and sends mail!
 
 Hey boy, what is the `pit.db` file?
