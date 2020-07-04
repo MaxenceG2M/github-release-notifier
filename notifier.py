@@ -1,3 +1,4 @@
+import os
 from configparser import ConfigParser
 import json
 import smtplib
@@ -15,8 +16,13 @@ RECEIVER_EMAIL = 'd@e.f'
 
 def main():
     global SMTP_PORT, SMTP_SERVER, SENDER_EMAIL, RECEIVER_EMAIL
+
+    script_dir = os.path.dirname(__file__)
+    conf_file = os.path.join(script_dir, 'conf.ini')
+    template_file = os.path.join(script_dir, 'template.html')
+
     parser = ConfigParser()
-    parser.read('conf.ini')
+    parser.read(conf_file)
 
     SMTP_PORT = parser.get('config', 'smtp_port')
     SMTP_SERVER = parser.get('config', 'smtp_server')
@@ -71,7 +77,7 @@ def main():
 
     # print(content)
 
-    with open('template.html', 'r') as f_template:
+    with open(template_file, 'r') as f_template:
         template = f_template.read()
 
     send_mail(template.replace('{{content}}', content))
