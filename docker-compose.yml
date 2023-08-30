@@ -13,3 +13,12 @@ services:
     ports:
       - "8025:8025"
       - "1025:1025"
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    depends_on:
+      - notifier
+    command: daemon --config=/opt/config.ini
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./ofelia.ini:/opt/config.ini
