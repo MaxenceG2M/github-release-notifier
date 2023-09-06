@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  notifier:
+    build: .
+    image: github-release-notifier:1
+    container_name: github-release-notifier
+    volumes:
+    - ./conf.ini:/app/conf.ini
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "8025:8025"
+      - "1025:1025"
