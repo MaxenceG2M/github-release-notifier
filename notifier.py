@@ -1,33 +1,40 @@
+import configparser
 import datetime
 import json
 import os
 import smtplib
-from configparser import ConfigParser
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import requests
 
-SMTP_PORT = 0
-SMTP_SERVER = "null"
-SENDER_EMAIL = "a@b.c"
-RECEIVER_EMAIL = "d@e.f"
+
+class EnvInjection(configparser.Interpolation):
+    """
+    Derived interpolation to take env variable before file variable.
+    Permit to keep the ini file for local / traditionnal use
+    And use env variable to overload configuration in a Docker usage.
+    """
+
+    def before_get(self, parser, section, option, value, defaults):
+        file_value = super().before_get(parser, section, option, value, defaults)
+        if section != parser.default_section:
+            return file_value
+
+        env_value = os.getenv(option.upper())
+        return env_value if env_value else file_value
 
 
 def main():
-    global SMTP_PORT, SMTP_SERVER, SENDER_EMAIL, RECEIVER_EMAIL
-
     script_dir = os.path.dirname(__file__)
     conf_file = os.path.join(script_dir, "conf.ini")
     template_file = os.path.join(script_dir, "template.html")
 
-    parser = ConfigParser()
+    parser = configparser.ConfigParser(
+        default_section="config", interpolation=EnvInjection()
+    )
     parser.read(conf_file)
-
-    SMTP_PORT = parser.get("config", "smtp_port")
-    SMTP_SERVER = parser.get("config", "smtp_server")
-    SENDER_EMAIL = parser.get("config", "sender_email")
-    RECEIVER_EMAIL = parser.get("config", "receiver_email")
+    default_config = parser["config"]
 
     projects = json.loads(parser.get("projects", "projects"))
     new_releases = []
@@ -73,7 +80,7 @@ def main():
     with open(template_file, "r", encoding="utf-8") as f_template:
         template = f_template.read()
 
-    send_mail(template.replace("{{content}}", content))
+    send_mail(template.replace("{{content}}", content), default_config)
 
     with open("conf.ini", "w", encoding="utf-8") as configfile:
         parser.write(configfile)
@@ -100,11 +107,16 @@ def get_last_release(project):
     }
 
 
-def send_mail(content):
+def send_mail(content, config):
+    smtp_port = config.get("smtp_port")
+    smtp_server = config.get("smtp_server")
+    sender_email = config.get("sender_email")
+    receiver_email = config.get("receiver_email")
+
     message = MIMEMultipart("alternative")
     message["Subject"] = "New Github releases"
-    message["From"] = SENDER_EMAIL
-    message["To"] = RECEIVER_EMAIL
+    message["From"] = sender_email
+    message["To"] = receiver_email
 
     # part1 = MIMEText(text, "plain")
     part2 = MIMEText(content, "html")
@@ -112,8 +124,8 @@ def send_mail(content):
     # message.attach(part1)
     message.attach(part2)
 
-    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-        server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, message.as_string())
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.sendmail(sender_email, receiver_email, message.as_string())
 
 
 def convert_date(date: str, dest_format="%d %b %Y at %H:%M") -> str:
