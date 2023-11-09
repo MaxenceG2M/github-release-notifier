@@ -47,5 +47,3 @@ Hey boy, what is the `pit.db` file?
 Oh, just for fun, and because I love this project, I use [pit by michaeldv](https://github.com/michaeldv/pit) to follow my task etc.
 
 It makes me think I should push my python version of this project on occasion when I will take the time to do...
-
-
