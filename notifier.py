@@ -44,7 +44,7 @@ def main():
         else:
             last_config_tag = parser.get("release", project)
             if last_config_tag != last_release["release_tag"]:
-                last_release["preview_tag"] = last_config_tag
+                last_release["previous_tag"] = last_config_tag
                 new_releases.append(last_release)
         parser.set("release", project, last_release["release_tag"])
 
@@ -55,42 +55,33 @@ def main():
     content = ""
 
     for new_r in new_releases:
-        content += """
-        <li><a href="{}" target="_blank">{}</a>: new release <a href="{}" target="_blank">{}</a> available (old: {}).
-        (published {})</li>
-        """.format(
-            new_r["release_url"],
-            new_r["project_name"],
-            new_r["release_url"],
-            new_r["release_tag"],
-            new_r["preview_tag"],
-            convert_date(new_r["published_date"]),
-        )
+        content += f"""
+        <li><a href="{new_r["release_url"]}" target="_blank">{new_r["project_name"]}</a>
+        : new release
+        <a href="{new_r["release_url"]}" target="_blank">{new_r["release_tag"]}</a>
+        available (old: {new_r["previous_tag"]}).
+        (published {convert_date(new_r["published_date"])})</li>"""
+
     for new_p in new_projects:
-        content += """
-        <li><a href="{}" target="_blank">{}</a> was added to your configuration. Last release: <a href="{}" target="_blank">{}</a>
-        (published {})</li>""".format(
-            new_p["release_url"],
-            new_p["project_name"],
-            new_p["release_url"],
-            new_p["release_tag"],
-            convert_date(new_p["published_date"]),
-        )
+        content += f"""
+        <li><a href="{new_p["release_url"]}" target="_blank">{new_p["project_name"]}</a>
+        was added to your configuration.
+        Last release:
+        <a href="{new_p["release_url"]}" target="_blank">{new_p["release_tag"]}</a>
+        (published {convert_date(new_p["published_date"])})</li>"""
 
-    # print(content)
-
-    with open(template_file, "r") as f_template:
+    with open(template_file, "r", encoding="utf-8") as f_template:
         template = f_template.read()
 
     send_mail(template.replace("{{content}}", content))
 
-    with open("conf.ini", "w") as configfile:
+    with open("conf.ini", "w", encoding="utf-8") as configfile:
         parser.write(configfile)
 
 
 def get_last_release(project):
-    url = "https://api.github.com/repos/{}/releases/latest".format(project)
-    result = requests.get(url)
+    url = f"https://api.github.com/repos/{project}/releases/latest"
+    result = requests.get(url, timeout=10)
 
     print(project)
     print(url)
@@ -125,8 +116,8 @@ def send_mail(content):
         server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, message.as_string())
 
 
-def convert_date(date: str, format="%d %b %Y at %H:%M") -> str:
-    return datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ").strftime(format)
+def convert_date(date: str, dest_format="%d %b %Y at %H:%M") -> str:
+    return datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ").strftime(dest_format)
 
 
 if __name__ == "__main__":
