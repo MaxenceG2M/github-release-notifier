@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 import smtplib
+import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -36,7 +37,13 @@ def main():
     parser.read(conf_file)
     default_config = parser["config"]
 
-    projects = json.loads(parser.get("projects", "projects"))
+    try:
+        projects = json.loads(parser.get("projects", "projects"))
+    except json.decoder.JSONDecodeError as jse:
+        print("ERROR: config file is not correctly JSON formatted!", end="\n\t")
+        print(jse)
+        sys.exit(1)
+
     new_releases = []
     new_projects = []
 
